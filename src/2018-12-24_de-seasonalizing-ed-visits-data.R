@@ -172,3 +172,150 @@ autoplot(df3.pre.decomposed[, 'trend'],
 
 
 
+# 4) Fit models to post-intervention series: -------------
+# > 4.1) model 1: trend only --------------
+
+m3.post.trend <- tslm(ts2.post.intervention ~ trend) 
+summary(m3.post.trend)  # no significant trend 
+
+# plot data and trend: 
+p4.data.and.trend <- 
+      data.frame(data = as.numeric(ts2.post.intervention), 
+                 trend = predict(m3.post.trend), 
+                 period = 1:20) %>% 
+      gather(key = "key", 
+             value = "val", 
+             -period) %>% 
+      ggplot(aes(x = period, 
+                 y = val, 
+                 group = key, 
+                 colour = key)) + 
+      geom_line() + 
+      theme(legend.position = "none"); p4.data.and.trend
+
+
+
+# > 4.2) model 2: approximate the seasonal pattern using Fourier terms -------
+
+m4.post.fourier <- tslm(ts2.post.intervention ~ trend + fourier(ts2.post.intervention,2))
+summary(m4.post.fourier)
+
+# save coefficients: 
+df4.coeffients.from.m4 <- tidy(m4.post.fourier)
+
+
+# what does the sum of all these terms look like? 
+sum.of.fouriers2 <- fourier(ts2.post.intervention, 2) %>%
+      as.data.frame() %>% 
+      apply(MARGIN = 1, 
+            FUN = sum)
+
+# >> plot sum of fourier terms: 
+p5.fourier.terms <- 
+      data.frame(period = rep(1:20), 
+                 value = sum.of.fouriers2) %>% 
+      ggplot(aes(x = period, 
+                 y = value)) +
+      geom_hline(yintercept = 0, 
+                 col = "grey60") + 
+      geom_line(col = "coral2"); p5.fourier.terms
+# compare p5 with p2 ==> same seasonal pattern detected
+
+
+# >> compare with original series: 
+ggarrange(p4.data.and.trend, 
+          p5.fourier.terms, 
+          nrow = 2)
+
+
+# now let's add in the final trend + fourier series: 
+p6.post.final.series <- 
+      data.frame(data = as.numeric(ts2.post.intervention), 
+                 predicted.with.fourier = predict(m4.post.fourier), 
+                 period = 1:20) %>% 
+      gather(key = "key", 
+             value = "value", 
+             -period) %>%  
+      
+      ggplot(aes(x = period, 
+                 y = value, 
+                 group = key, 
+                 col = key)) + 
+      geom_line() + 
+      theme(legend.position = "bottom"); p6.post.final.series
+
+
+# 4.3) decomposition into trend/season/remainder: -----
+
+# first let's create the trend series from model m2: 
+post.trend.m4 <- 
+      df4.coeffients.from.m4$estimate[1] +  # intercept 
+      df4.coeffients.from.m4$estimate[2] * seq_along(ts2.post.intervention)
+
+
+df5.post.decomposed <- 
+      cbind(data = ts2.post.intervention, 
+            trend = post.trend.m4,                            # from model m2.fourier
+            season = ts2.post.intervention - post.trend.m4 - resid(m4.post.fourier),  # from model m2.fourier
+            remainder = resid(m4.post.fourier))               # from model m2.fourier
+
+df5.post.decomposed
+str(df5.post.decomposed)  
+# note that this is not a df, so we can't use $ to subset columns. 
+# e.g. to get teh season component, we write: 
+# df2.decomposed[,'season']
+
+# plot decomposed series: 
+autoplot(df5.post.decomposed, facets = TRUE)
+
+
+# plot all components: 
+autoplot(df5.post.decomposed[, 'trend'], 
+         series = "Trend") + 
+      
+      autolayer(df5.post.decomposed[, 'season'], 
+                series = "Seasonal") + 
+      
+      autolayer(df5.post.decomposed[, 'remainder'], 
+                series = "Remainder") + 
+      
+      autolayer(ts2.post.intervention, 
+                series = "Raw data") + 
+      
+      
+      labs(title = "ED Visits: De-seasonalized trend post-intervention", 
+           subtitle = "Jan 2017 to Aug 2018")
+
+
+
+
+
+# 5) create one df with pre- and post-intervention trends: -------
+
+df6.trends.pre.and.post <- 
+      data.frame(trend.value = c(df3.pre.decomposed[, "trend"], 
+                                 df5.post.decomposed[, "trend"]),
+                 post.intervention = c(rep(0, 24), 
+                                       rep(1, 20)) %>% as.factor, 
+                 period = 1:44)
+
+df6.trends.pre.and.post
+
+
+# 5.1) plot pre- and post- trends: 
+p7.pre.post.trends <- 
+      df6.trends.pre.and.post %>% 
+      ggplot(aes(x = period, 
+                 y = trend.value, 
+                 group = post.intervention, 
+                 colour = post.intervention)) + 
+      
+      geom_point() + 
+      stat_smooth() + 
+      
+      geom_vline(xintercept = 24,
+                 colour = "grey50") + 
+      
+      scale_y_continuous(limits = c(0, 20)); p7.pre.post.trends
+
+
