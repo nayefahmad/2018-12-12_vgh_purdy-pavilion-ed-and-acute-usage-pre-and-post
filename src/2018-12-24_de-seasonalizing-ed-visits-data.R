@@ -164,6 +164,8 @@ autoplot(df3.pre.decomposed[, 'trend'],
       autolayer(ts1.pre.intervention, 
                 series = "Raw data") + 
       
+      geom_hline(yintercept = 0) + 
+      
       
       labs(title = "ED Visits: De-seasonalized trend pre-intervention", 
            subtitle = "Jan 2015 to Dec 2016")
@@ -282,6 +284,8 @@ autoplot(df5.post.decomposed[, 'trend'],
       autolayer(ts2.post.intervention, 
                 series = "Raw data") + 
       
+      geom_hline(yintercept = 0) + 
+      
       
       labs(title = "ED Visits: De-seasonalized trend post-intervention", 
            subtitle = "Jan 2017 to Aug 2018")
@@ -290,11 +294,11 @@ autoplot(df5.post.decomposed[, 'trend'],
 
 
 
-# 5) create one df with pre- and post-intervention trends: -------
+# 5) df with pre- and post-intervention de-seasonalized series: -------
 
 df6.trends.pre.and.post <- 
-      data.frame(trend.value = c(df3.pre.decomposed[, "trend"], 
-                                 df5.post.decomposed[, "trend"]),
+      data.frame(trend.value = c(ts1.pre.intervention - df3.pre.decomposed[, "season"], 
+                                 ts2.post.intervention -  df5.post.decomposed[, "season"]),
                  post.intervention = c(rep(0, 24), 
                                        rep(1, 20)) %>% as.factor, 
                  period = 1:44)
@@ -310,12 +314,31 @@ p7.pre.post.trends <-
                  group = post.intervention, 
                  colour = post.intervention)) + 
       
-      geom_point() + 
-      stat_smooth() + 
+      geom_line() + 
+      stat_smooth(method = "lm") + 
       
       geom_vline(xintercept = 24,
                  colour = "grey50") + 
       
-      scale_y_continuous(limits = c(0, 20)); p7.pre.post.trends
+      geom_vline(xintercept = 25,
+                 colour = "grey50") + 
+      
+      scale_y_continuous(limits = c(0, 20)) + 
+      
+      labs(title = "VGH Purdy Pavilion Evaluation", 
+           subtitle = "ED visits (de-seasonalized) pre- and post- Jan 2017"); p7.pre.post.trends
 
 
+
+# 6) Write output: --------------
+write_csv(df6.trends.pre.and.post, 
+          here("results", 
+               "dst", 
+               "2019-01-04_data-for-segmented-regression-analysis.csv"))
+
+
+ggsave(here("results", 
+            "dst", 
+            "2019-01-04_data-for-segmented-regression-analysis.pdf"), 
+       p7.pre.post.trends, 
+       width = 10)
