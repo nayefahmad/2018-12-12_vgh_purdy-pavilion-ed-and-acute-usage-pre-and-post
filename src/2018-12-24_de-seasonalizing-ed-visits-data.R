@@ -315,6 +315,7 @@ p7.pre.post.trends <-
                  colour = post.intervention)) + 
       
       geom_line() + 
+      geom_point() + 
       stat_smooth(method = "lm") + 
       
       geom_vline(xintercept = 24,
