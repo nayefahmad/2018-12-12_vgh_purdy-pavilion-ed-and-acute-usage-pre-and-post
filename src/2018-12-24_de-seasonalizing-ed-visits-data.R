@@ -299,9 +299,11 @@ autoplot(df5.post.decomposed[, 'trend'],
 df6.trends.pre.and.post <- 
       data.frame(trend.value = c(ts1.pre.intervention - df3.pre.decomposed[, "season"], 
                                  ts2.post.intervention -  df5.post.decomposed[, "season"]),
+                 timeperiod = 1:44,
                  post.intervention = c(rep(0, 24), 
-                                       rep(1, 20)) %>% as.factor, 
-                 period = 1:44)
+                                       rep(1, 20)) %>% as.factor,
+                 time.after.intervention = c(rep(0, 24), 
+                                             1:20))
 
 df6.trends.pre.and.post
 
@@ -309,7 +311,7 @@ df6.trends.pre.and.post
 # 5.1) plot pre- and post- trends: 
 p7.pre.post.trends <- 
       df6.trends.pre.and.post %>% 
-      ggplot(aes(x = period, 
+      ggplot(aes(x = timeperiod, 
                  y = trend.value, 
                  group = post.intervention, 
                  colour = post.intervention)) + 
@@ -330,8 +332,93 @@ p7.pre.post.trends <-
            subtitle = "ED visits (de-seasonalized) pre- and post- Jan 2017"); p7.pre.post.trends
 
 
+# 6) segmented regression analysis: ----------
 
-# 6) Write output: --------------
+m5.segmented.regression <- lm(trend.value ~ timeperiod + 
+                                    post.intervention + 
+                                    time.after.intervention, 
+                              data = df6.trends.pre.and.post)
+
+
+summary(m5.segmented.regression)
+
+# > 6.1) diagnostics: -------------
+par(mfrow = c(2,2))
+plot(m5.segmented.regression)
+par(mfrow = c(1,1))
+
+resid(m5.segmented.regression) %>% density() %>% plot
+
+# > 6.2) interpretation of segmented regression: --------
+df7.coeff.from.segmented.regression <-  tidy(m5.segmented.regression)
+
+df8.coefficient.confints <- confint(m5.segmented.regression,
+                                    level = 0.95) 
+
+# remove rownames: 
+rownames(df8.coefficient.confints) <- NULL
+
+# final summary of coefficients:
+df9.coefficients.with.CIs <- 
+      cbind(df7.coeff.from.segmented.regression, 
+            df8.coefficient.confints) %>% 
+      rename(ci.lower = `2.5 %`, 
+             ci.upper = `97.5 %`)
+
+
+# 6.3) counterfactual estimates (long-term effect of intervention): ----------------
+
+df10.counterfactuals <- 
+      df6.trends.pre.and.post %>% 
+      
+      filter(post.intervention == 1) %>% 
+      mutate(predicted.diff.from.counterfactual = 
+                   
+                   # point estimate off difference from counterfactual: 
+                   df9.coefficients.with.CIs$estimate[3] +   
+                   df9.coefficients.with.CIs$estimate[4] * time.after.intervention,
+            
+            
+            
+            lower.predicted.diff.from.counterfactual = 
+      
+                   # smallest possible level & trend CHANGES from pre-intervention 
+                   df9.coefficients.with.CIs$ci.upper[3] +   
+                   df9.coefficients.with.CIs$ci.upper[4] * time.after.intervention, 
+             
+             
+             upper.predicted.diff.from.counterfactual = 
+                   
+                   # LARGEST possible level & trend CHANGES from pre-intervention 
+                   df9.coefficients.with.CIs$ci.lower[3] +   
+                   df9.coefficients.with.CIs$ci.lower[4] * time.after.intervention
+             
+             )
+
+
+# long-term effect of the intervention over following 20 months: 
+df11.long.term.effects <- data.frame(
+      estimate.long.term.effect = sum(df10.counterfactuals$predicted.diff.from.counterfactual),   
+      lower.long.term.effect = sum(df10.counterfactuals$lower.predicted.diff.from.counterfactual),  
+      upper.long.term.effect = sum(df10.counterfactuals$upper.predicted.diff.from.counterfactual)
+)
+
+df11.long.term.effects
+
+
+# > 6.4) MODEL INTERPRETATION: ---------------- 
+# pre-intervention y-intercept: 6.8 ED visits 
+# pre-intervention slope: +0.37 ED visits per month 
+
+# immediate effect of intervention: change of -9.9 ED visits (95% CI: [-12.9, -6.9]) 
+
+# longer-term effect of intervention: 
+# reduction of 293 ED visits over 20 months (95% CI: [-183, -402]) 
+
+
+
+
+# 7) Write outputs: --------------
 write_csv(df6.trends.pre.and.post, 
           here("results", 
                "dst", 
