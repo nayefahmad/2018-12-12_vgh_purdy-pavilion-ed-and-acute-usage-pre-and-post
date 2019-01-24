@@ -328,6 +328,9 @@ p7.pre.post.trends <-
       
       scale_y_continuous(limits = c(0, 20)) + 
       
+      theme_minimal(base_size = 14) + 
+      theme(panel.border = element_rect(fill = NA)) + 
+      
       labs(title = "VGH Purdy Pavilion Evaluation", 
            subtitle = "ED visits (de-seasonalized) pre- and post- Jan 2017"); p7.pre.post.trends
 
@@ -430,3 +433,17 @@ ggsave(here("results",
             "2019-01-04_data-for-segmented-regression-analysis.pdf"), 
        p7.pre.post.trends, 
        width = 10)
+
+
+write_csv(df9.coefficients.with.CIs, 
+          here("results", 
+               "dst", 
+               "2019-01-07_segmented-regression-model-coefficients.csv"))
+
+
+write_csv(df10.counterfactuals, 
+          here("results", 
+               "dst", 
+               "2019-01-07_counterfactual-estimates-for-long-term-effect-of-intervention.csv"))
+
+
