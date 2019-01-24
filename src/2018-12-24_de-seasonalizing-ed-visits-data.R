@@ -1,7 +1,7 @@
 
 
 #*************************************************************************
-# DE-SEASONALIZING NUM ED VISITS DATA
+# DE-SEASONALIZING NUM ED VISITS DATA and RUNNING SEGMENTED REGRESSION ANALYSIS
 # 2018-12-24
 # Nayef 
 #*************************************************************************
@@ -355,6 +355,10 @@ resid(m5.segmented.regression) %>% density() %>% plot
 # > 6.2) interpretation of segmented regression: --------
 df7.coeff.from.segmented.regression <-  tidy(m5.segmented.regression)
 
+df7.1.predicted.values <- augment(m5.segmented.regression) %>% 
+      select(.fitted) %>% 
+      rename(fitted.values = .fitted)
+
 df8.coefficient.confints <- confint(m5.segmented.regression,
                                     level = 0.95) 
 
@@ -422,10 +426,11 @@ df11.long.term.effects
 
 
 # 7) Write outputs: --------------
-write_csv(df6.trends.pre.and.post, 
+write_csv(cbind(df6.trends.pre.and.post, 
+                df7.1.predicted.values), 
           here("results", 
                "dst", 
-               "2019-01-04_data-for-segmented-regression-analysis.csv"))
+               "2019-01-23_data-for-segmented-regression-analysis.csv"))
 
 
 ggsave(here("results", 
