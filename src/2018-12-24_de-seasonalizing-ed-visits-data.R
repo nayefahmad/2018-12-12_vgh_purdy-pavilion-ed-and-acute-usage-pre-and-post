@@ -381,7 +381,14 @@ df10.counterfactuals <-
       filter(post.intervention == 1) %>% 
       mutate(predicted.diff.from.counterfactual = 
                    
-                   # point estimate off difference from counterfactual: 
+                   # point estimate off difference from counterfactual: Note:
+                   # see p302 of paper "Segmented regression analysis of
+                   # interrupted time series studies in medication use research"
+                   
+                   # coefficient beta2 + beta3 * time after intervention is the
+                   # estimate of the long-term effect
+                   
+                   
                    df9.coefficients.with.CIs$estimate[3] +   
                    df9.coefficients.with.CIs$estimate[4] * time.after.intervention,
             
