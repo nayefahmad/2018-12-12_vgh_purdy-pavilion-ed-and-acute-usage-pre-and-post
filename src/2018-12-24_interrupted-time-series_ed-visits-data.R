@@ -433,29 +433,29 @@ df11.long.term.effects
 
 
 # 7) Write outputs: --------------
-write_csv(cbind(df6.trends.pre.and.post, 
-                df7.1.predicted.values), 
-          here("results", 
-               "dst", 
-               "2019-01-23_data-for-segmented-regression-analysis.csv"))
-
-
-ggsave(here("results", 
-            "dst", 
-            "2019-01-04_data-for-segmented-regression-analysis.pdf"), 
-       p7.pre.post.trends, 
-       width = 10)
-
-
-write_csv(df9.coefficients.with.CIs, 
-          here("results", 
-               "dst", 
-               "2019-01-07_segmented-regression-model-coefficients.csv"))
-
-
-write_csv(df10.counterfactuals, 
-          here("results", 
-               "dst", 
-               "2019-01-07_counterfactual-estimates-for-long-term-effect-of-intervention.csv"))
+# write_csv(cbind(df6.trends.pre.and.post, 
+#                 df7.1.predicted.values), 
+#           here("results", 
+#                "dst", 
+#                "2019-01-23_data-for-segmented-regression-analysis.csv"))
+# 
+# 
+# ggsave(here("results", 
+#             "dst", 
+#             "2019-01-04_data-for-segmented-regression-analysis.pdf"), 
+#        p7.pre.post.trends, 
+#        width = 10)
+# 
+# 
+# write_csv(df9.coefficients.with.CIs, 
+#           here("results", 
+#                "dst", 
+#                "2019-01-07_segmented-regression-model-coefficients.csv"))
+# 
+# 
+# write_csv(df10.counterfactuals, 
+#           here("results", 
+#                "dst", 
+#                "2019-01-07_counterfactual-estimates-for-long-term-effect-of-intervention.csv"))
 
 

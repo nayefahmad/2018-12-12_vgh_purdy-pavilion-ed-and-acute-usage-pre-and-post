@@ -22,7 +22,7 @@ source(here("src",
             "stl.as.df_function.R"))
 
 
-# 1) input dataset: -------------------
+# 1) input dataset - acute admits: -------------------
 df1.orig.data <- read_csv(here("data", 
                                "2019-01-30_vgh_purdy-pavilion-intervention-acute-admits.csv")) %>% 
       clean_names()
@@ -104,6 +104,8 @@ p2.fourier.terms <-
                  col = "grey60") + 
       geom_line(col = "coral2"); p2.fourier.terms
 
+# interestingly, this is very similar to the pattern for the ED visits series
+
 # >> compare with original series: 
 ggarrange(p1.data.and.trend, 
           p2.fourier.terms, 
@@ -125,6 +127,13 @@ p3.final.series <-
                  col = key)) + 
       geom_line() + 
       theme(legend.position = "bottom"); p3.final.series
+
+
+# compare predictions from model m1 vs m2: 
+ggarrange(p1.data.and.trend, 
+          p3.final.series, 
+          nrow = 2)
+
 
 
 # 3.3) decomposition into trend/season/remainder: -----
@@ -245,6 +254,13 @@ p6.post.final.series <-
                  col = key)) + 
       geom_line() + 
       theme(legend.position = "bottom"); p6.post.final.series
+
+
+# compare predictions from model m1 vs m2: 
+ggarrange(p4.data.and.trend, 
+          p6.post.final.series, 
+          nrow = 2)
+
 
 
 # 4.3) decomposition into trend/season/remainder: -----
@@ -433,29 +449,29 @@ df11.long.term.effects
 
 
 # 7) Write outputs: --------------
-# write_csv(cbind(df6.trends.pre.and.post, 
-#                 df7.1.predicted.values), 
-#           here("results", 
-#                "dst", 
-#                "2019-01-23_data-for-segmented-regression-analysis.csv"))
-# 
-# 
-# ggsave(here("results", 
-#             "dst", 
-#             "2019-01-04_data-for-segmented-regression-analysis.pdf"), 
-#        p7.pre.post.trends, 
-#        width = 10)
-# 
-# 
-# write_csv(df9.coefficients.with.CIs, 
-#           here("results", 
-#                "dst", 
-#                "2019-01-07_segmented-regression-model-coefficients.csv"))
-# 
-# 
-# write_csv(df10.counterfactuals, 
-#           here("results", 
-#                "dst", 
-#                "2019-01-07_counterfactual-estimates-for-long-term-effect-of-intervention.csv"))
-# 
-# 
+write_csv(cbind(df6.trends.pre.and.post,
+                df7.1.predicted.values),
+          here("results",
+               "dst",
+               "2019-01-31_acute-admits_data-for-segmented-regression-analysis.csv"))
+ 
+ 
+ggsave(here("results",
+            "dst",
+            "2019-01-31_acute-admits_data-for-segmented-regression-analysis.pdf"),
+       p7.pre.post.trends,
+       width = 10)
+ 
+ 
+write_csv(df9.coefficients.with.CIs,
+          here("results",
+               "dst",
+               "2019-01-31_acute-admits_segmented-regression-model-coefficients.csv"))
+ 
+ 
+write_csv(df10.counterfactuals,
+          here("results",
+               "dst",
+               "2019-01-31_acute-admits_counterfactual-estimates-for-long-term-effect-of-intervention.csv"))
+ 
+ 
