@@ -23,6 +23,8 @@ source(here("src",
 
 
 # 1) input dataset: -------------------
+options(readr.default_locale=readr::locale(tz="America/Los_Angeles"))
+
 df1.orig.data <- read_csv(here("data", 
                                "2018-12-24_vgh_purdy-pavilion-intervention.csv")) %>% 
       clean_names()
@@ -65,7 +67,7 @@ summary(m1.pre.trend)  # no significant trend
 # plot data and trend: 
 p1.data.and.trend <- 
       data.frame(data = as.numeric(ts1.pre.intervention), 
-                 trend = predict(m1.pre.trend), 
+                 trend = as.numeric(m1.pre.trend$fitted.values), 
                  period = 1:24) %>% 
       gather(key = "key", 
              value = "val", 
@@ -113,7 +115,7 @@ ggarrange(p1.data.and.trend,
 # now let's add in the final trend + fourier series: 
 p3.final.series <- 
       data.frame(data = as.numeric(ts1.pre.intervention), 
-                 predicted.with.fourier = predict(m2.fourier), 
+                 predicted.with.fourier = as.numeric(m2.fourier$fitted.values), 
                  period = 1:24) %>% 
       gather(key = "key", 
              value = "value", 
@@ -183,8 +185,8 @@ summary(m3.post.trend)  # no significant trend
 # plot data and trend: 
 p4.data.and.trend <- 
       data.frame(data = as.numeric(ts2.post.intervention), 
-                 trend = predict(m3.post.trend), 
-                 period = 1:20) %>% 
+                 trend = as.numeric(m3.post.trend$fitted.values), 
+                 period = 1:24) %>% 
       gather(key = "key", 
              value = "val", 
              -period) %>% 
@@ -214,7 +216,7 @@ sum.of.fouriers2 <- fourier(ts2.post.intervention, 2) %>%
 
 # >> plot sum of fourier terms: 
 p5.fourier.terms <- 
-      data.frame(period = rep(1:20), 
+      data.frame(period = rep(1:24), 
                  value = sum.of.fouriers2) %>% 
       ggplot(aes(x = period, 
                  y = value)) +
@@ -233,8 +235,8 @@ ggarrange(p4.data.and.trend,
 # now let's add in the final trend + fourier series: 
 p6.post.final.series <- 
       data.frame(data = as.numeric(ts2.post.intervention), 
-                 predicted.with.fourier = predict(m4.post.fourier), 
-                 period = 1:20) %>% 
+                 predicted.with.fourier = as.numeric(m4.post.fourier$fitted.values), 
+                 period = 1:24) %>% 
       gather(key = "key", 
              value = "value", 
              -period) %>%  
@@ -299,11 +301,11 @@ autoplot(df5.post.decomposed[, 'trend'],
 df6.trends.pre.and.post <- 
       data.frame(trend.value = c(ts1.pre.intervention - df3.pre.decomposed[, "season"], 
                                  ts2.post.intervention -  df5.post.decomposed[, "season"]),
-                 timeperiod = 1:44,
+                 timeperiod = 1:48,
                  post.intervention = c(rep(0, 24), 
-                                       rep(1, 20)) %>% as.factor,
+                                       rep(1, 24)) %>% as.factor,
                  time.after.intervention = c(rep(0, 24), 
-                                             1:20))
+                                             1:24))
 
 df6.trends.pre.and.post
 
@@ -410,7 +412,7 @@ df10.counterfactuals <-
              )
 
 
-# long-term effect of the intervention over following 20 months: 
+# long-term effect of the intervention over following 24 months: 
 df11.long.term.effects <- data.frame(
       estimate.long.term.effect = sum(df10.counterfactuals$predicted.diff.from.counterfactual),   
       lower.long.term.effect = sum(df10.counterfactuals$lower.predicted.diff.from.counterfactual),  
@@ -424,38 +426,38 @@ df11.long.term.effects
 # pre-intervention y-intercept: 6.8 ED visits 
 # pre-intervention slope: +0.37 ED visits per month 
 
-# immediate effect of intervention: change of -9.9 ED visits (95% CI: [-12.9, -6.9]) 
+# immediate effect of intervention: change of -10.8 ED visits (95% CI: [-13.7, -7.9]) 
 
 # longer-term effect of intervention: 
-# reduction of 293 ED visits over 20 months (95% CI: [-183, -402]) 
+# reduction of 357 ED visits over 24 months (95% CI: [-224, -492]) 
 
 
 
 
 # 7) Write outputs: --------------
-# write_csv(cbind(df6.trends.pre.and.post, 
-#                 df7.1.predicted.values), 
-#           here("results", 
-#                "dst", 
-#                "2019-01-23_data-for-segmented-regression-analysis.csv"))
-# 
-# 
-# ggsave(here("results", 
-#             "dst", 
-#             "2019-01-04_data-for-segmented-regression-analysis.pdf"), 
-#        p7.pre.post.trends, 
-#        width = 10)
-# 
-# 
-# write_csv(df9.coefficients.with.CIs, 
-#           here("results", 
-#                "dst", 
-#                "2019-01-07_segmented-regression-model-coefficients.csv"))
-# 
-# 
-# write_csv(df10.counterfactuals, 
-#           here("results", 
-#                "dst", 
-#                "2019-01-07_counterfactual-estimates-for-long-term-effect-of-intervention.csv"))
+write_csv(cbind(df6.trends.pre.and.post,
+                df7.1.predicted.values),
+          here("results",
+               "dst",
+               "2019-01-23_data-for-segmented-regression-analysis.csv"))
+
+
+ggsave(here("results",
+            "dst",
+            "2019-01-04_data-for-segmented-regression-analysis.pdf"),
+       p7.pre.post.trends,
+       width = 10)
+
+
+write_csv(df9.coefficients.with.CIs,
+          here("results",
+               "dst",
+               "2019-01-07_segmented-regression-model-coefficients.csv"))
+
+
+write_csv(df10.counterfactuals,
+          here("results",
+               "dst",
+               "2019-01-07_counterfactual-estimates-for-long-term-effect-of-intervention.csv"))
 
 
