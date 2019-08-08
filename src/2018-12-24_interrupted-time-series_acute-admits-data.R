@@ -442,7 +442,7 @@ df11.long.term.effects
 # pre-intervention y-intercept: 4.5 admits 
 # pre-intervention slope: +0.37 ED visits per month 
 
-# immediate effect of intervention: change of -$4.6 admits (95% CI: [-6.7, -2.4]) 
+# immediate effect of intervention: change of -4.6 admits (95% CI: [-6.7, -2.4]) 
 
 # longer-term effect of intervention: 
 # reduction of 156 admits over 20 months (95% CI: [-57, -256]) 
