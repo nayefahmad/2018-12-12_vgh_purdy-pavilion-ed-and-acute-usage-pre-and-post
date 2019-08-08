@@ -1,14 +1,21 @@
 
+#'--- 
+#' title: "De-seasonalizing daily ED visit data and running segmented regression analysis"
+#' author: "Nayef Ahmad"
+#' date: "2018-12-24"
+#' output: 
+#'   html_document: 
+#'     keep_md: yes
+#'     code_folding: hide
+#'     toc: true
+#'     toc_float: true
+#' ---
 
-#*************************************************************************
-# DE-SEASONALIZING NUM ED VISITS DATA and RUNNING SEGMENTED REGRESSION ANALYSIS
-# 2018-12-24
-# Nayef 
-#*************************************************************************
 
+
+#+ lib, include = FALSE 
 library(forecast)
 library(fpp)
-library(ggplot2)
 library(tidyverse)
 library(here)
 library(janitor)
@@ -16,11 +23,12 @@ library(TSA)
 library(ggpubr)
 library(broom)
 
-
-# rm(list = ls())
+#+ data 
 source(here("src", 
             "stl.as.df_function.R"))
 
+
+#' ## Data
 
 # 1) input dataset: -------------------
 options(readr.default_locale=readr::locale(tz="America/Los_Angeles"))
@@ -57,6 +65,9 @@ ts2.post.intervention
 
 
 
+#+ models
+#' ## Fit models to pre-intervention time series
+#' ### Model 1: trend only 
 
 # 3) Fit models to pre-intervention series: -------------
 # > 3.1) model 1: trend only --------------
@@ -80,7 +91,7 @@ p1.data.and.trend <-
       theme(legend.position = "none"); p1.data.and.trend
 
 
-
+#' ### Model 2: approximate the seasonal pattern using Fourier terms
 # > 3.2) model 2: approximate the seasonal pattern using Fourier terms -------
 
 m2.fourier <- tslm(ts1.pre.intervention ~ trend + fourier(ts1.pre.intervention,2))
@@ -89,6 +100,7 @@ summary(m2.fourier)
 # save coefficients: 
 df2.coeffients.from.m2 <- tidy(m2.fourier)
 
+#' ## Examining the Fourier terms 
 
 # what does the sum of all these terms look like? 
 sum.of.fouriers <- fourier(ts1.pre.intervention, 2) %>%
@@ -128,8 +140,9 @@ p3.final.series <-
       geom_line() + 
       theme(legend.position = "bottom"); p3.final.series
 
+#' ## Decomposition into trend/season/remainder
 
-# 3.3) decomposition into trend/season/remainder: -----
+# > 3.3) decomposition into trend/season/remainder: -----
 
 # first let's create the trend series from model m2: 
 pre.trend.m2 <- 
@@ -174,7 +187,8 @@ autoplot(df3.pre.decomposed[, 'trend'],
 
 
 
-
+#' ## Fit models to post-intervention time series
+#' ### Model 1: trend only 
 
 # 4) Fit models to post-intervention series: -------------
 # > 4.1) model 1: trend only --------------
@@ -198,6 +212,7 @@ p4.data.and.trend <-
       theme(legend.position = "none"); p4.data.and.trend
 
 
+#' ### Model 2: approximate the seasonal pattern using Fourier terms
 
 # > 4.2) model 2: approximate the seasonal pattern using Fourier terms -------
 
@@ -248,8 +263,8 @@ p6.post.final.series <-
       geom_line() + 
       theme(legend.position = "bottom"); p6.post.final.series
 
-
-# 4.3) decomposition into trend/season/remainder: -----
+#' ## Decomposition into trend/season/remainder
+# > 4.3) decomposition into trend/season/remainder: -----
 
 # first let's create the trend series from model m2: 
 post.trend.m4 <- 
@@ -295,6 +310,7 @@ autoplot(df5.post.decomposed[, 'trend'],
 
 
 
+#' ## Df with pre- and post-intervention de-seasonalized series
 
 # 5) df with pre- and post-intervention de-seasonalized series: -------
 
@@ -336,6 +352,8 @@ p7.pre.post.trends <-
       labs(title = "VGH Purdy Pavilion Evaluation", 
            subtitle = "ED visits (de-seasonalized) pre- and post- Jan 2017"); p7.pre.post.trends
 
+
+#' ## Segmented regression analysis
 
 # 6) segmented regression analysis: ----------
 
@@ -421,6 +439,8 @@ df11.long.term.effects <- data.frame(
 
 df11.long.term.effects
 
+
+#' ## Model interpretation
 
 # > 6.4) MODEL INTERPRETATION: ---------------- 
 # pre-intervention y-intercept: 6.8 ED visits 
